@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robofoot-tracker"
+version = "0.1.0"
+description = "Robot football tracker using color tag detection"
+requires-python = ">=3.10"
+dependencies = [
+    "opencv-python>=4.5",
+    "numpy>=1.21",
+]
+
+[tool.setuptools.packages.find]
+include = ["robofoot_tracker*"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
