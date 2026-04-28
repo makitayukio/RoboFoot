@@ -1,3 +1,18 @@
+# =============================================================================
+# Grupo 3 - RoboFoot Tracker
+# MCZA018 - Processamento Digital de Imagens - 2026.1
+#
+# Integrantes:
+#   - Igor Ladeia de Freitas         (RA: 11201922180)
+#   - Gustavo Fernandes do Nascimento (RA: 11202021700)
+#   - Ryan Lucas da Silva            (RA: 11202522362)
+#   - Eduardo Yukio Makita            (RA: 11202020221)
+#
+# Data: 2026-04-25
+# Programa: robofoot_tracker
+# Exemplo de execução:
+#   $ python -c "from robofoot_tracker import Tracker; Tracker(camera=0).run_live()"
+# =============================================================================
 """Frame preprocessing with CLAHE and Gaussian blur."""
 
 from __future__ import annotations

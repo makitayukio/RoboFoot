@@ -1,3 +1,18 @@
+# =============================================================================
+# Grupo 3 - RoboFoot Tracker
+# MCZA018 - Processamento Digital de Imagens - 2026.1
+#
+# Integrantes:
+#   - Igor Ladeia de Freitas         (RA: 11201922180)
+#   - Gustavo Fernandes do Nascimento (RA: 11202021700)
+#   - Ryan Lucas da Silva            (RA: 11202522362)
+#   - Eduardo Yukio Makita            (RA: 11202020221)
+#
+# Data: 2026-04-25
+# Programa: robofoot_tracker
+# Exemplo de execução:
+#   $ python -c "from robofoot_tracker import Tracker; Tracker(camera=0).run_live()"
+# =============================================================================
 """Homography calibration for pixel-to-field coordinate mapping.
 
 Corner order convention: TL, TR, BR, BL (top-left, top-right, bottom-right, bottom-left).
@@ -88,6 +103,7 @@ def estimate_distortion(
 def calibrate_interactive(
     frame: np.ndarray,
     field_dims: FieldDimensions,
+    cap: cv2.VideoCapture | None = None,
 ) -> CalibrationData:
     """Open an OpenCV window for the user to click 4 corners, then auto-generate midpoints.
 
@@ -145,7 +161,7 @@ def calibrate_interactive(
             else:
                 points.pop()
 
-    window = "Calibration - click 4 corners"
+    window = "Grupo 3 - Calibration - click 4 corners"
     cv2.namedWindow(window, cv2.WINDOW_NORMAL)
     max_w, max_h = 1280, 720
     scale = min(max_w / frame.shape[1], max_h / frame.shape[0])
@@ -154,6 +170,10 @@ def calibrate_interactive(
 
     confirmed = False
     while True:
+        if cap is not None:
+            ok, live = cap.read()
+            if ok:
+                frame = live
         display = frame.copy()
         for i, pt in enumerate(points):
             cv2.circle(display, (int(pt[0]), int(pt[1])), 5, (0, 255, 0), -1)
@@ -273,7 +293,7 @@ def _compute_hsv_ranges(
     return ranges
 
 
-def calibrate_colors_interactive(frame: np.ndarray) -> "ColorConfig":
+def calibrate_colors_interactive(frame: np.ndarray, cap: cv2.VideoCapture | None = None) -> "ColorConfig":
     """Open an OpenCV window for the user to sample HSV colors for each tag color.
 
     Iterates 7 colors: blue, yellow, red, green, cyan, purple, orange.
@@ -294,12 +314,13 @@ def calibrate_colors_interactive(frame: np.ndarray) -> "ColorConfig":
     for color_name in COLOR_ORDER:
         samples: list[np.ndarray] = []
         click_points: list[tuple[int, int]] = []
+        hsv_ref = [hsv_frame]  # mutable ref so callback sees live HSV
 
         def _on_mouse(event: int, x: int, y: int, flags: int, param: object) -> None:
             if event == cv2.EVENT_LBUTTONDOWN:
                 x0, y0 = max(x - 2, 0), max(y - 2, 0)
                 x1, y1 = min(x + 3, w_img), min(y + 3, h_img)
-                patch = hsv_frame[y0:y1, x0:x1].reshape(-1, 3)
+                patch = hsv_ref[0][y0:y1, x0:x1].reshape(-1, 3)
                 samples.extend(patch.astype(np.float32))
                 click_points.append((x, y))
             elif event == cv2.EVENT_RBUTTONDOWN and click_points:
@@ -321,6 +342,12 @@ def calibrate_colors_interactive(frame: np.ndarray) -> "ColorConfig":
         skipped = False
         cancelled = False
         while True:
+            if cap is not None:
+                ok, live = cap.read()
+                if ok:
+                    frame = live
+                    hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                    hsv_ref[0] = hsv_frame
             display = frame.copy()
             # Draw click point circles
             for cp in click_points:

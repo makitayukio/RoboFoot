@@ -1,3 +1,18 @@
+# =============================================================================
+# Grupo 3 - RoboFoot Tracker
+# MCZA018 - Processamento Digital de Imagens - 2026.1
+#
+# Integrantes:
+#   - Igor Ladeia de Freitas         (RA: 11201922180)
+#   - Gustavo Fernandes do Nascimento (RA: 11202021700)
+#   - Ryan Lucas da Silva            (RA: 11202522362)
+#   - Eduardo Yukio Makita            (RA: 11202020221)
+#
+# Data: 2026-04-25
+# Programa: robofoot_tracker
+# Exemplo de execução:
+#   $ python -c "from robofoot_tracker import Tracker; Tracker(camera=0).run_live()"
+# =============================================================================
 """Visualization utilities for drawing robot detections on frames."""
 
 from __future__ import annotations
@@ -77,25 +92,43 @@ def draw_detections(
         # Circle at position
         cv2.circle(out, (px, py), _ROBOT_RADIUS, color, 2)
 
-        # Arrowhead at circle edge showing orientation
+        # Arrow OUTSIDE the circle showing orientation
         rad = math.radians(det.angle_deg)
-        tip_x = int(px + _ROBOT_RADIUS * math.cos(rad))
-        tip_y = int(py - _ROBOT_RADIUS * math.sin(rad))
-        head_len, head_width = 12, 8
-        base_x = tip_x - int(head_len * math.cos(rad))
-        base_y = tip_y + int(head_len * math.sin(rad))
+        # Base at circle edge
+        base_tip_x = px + _ROBOT_RADIUS * math.cos(rad)
+        base_tip_y = py - _ROBOT_RADIUS * math.sin(rad)
+        # Tip extends 20px further outward
+        arrow_len = 20
+        tip_x = int(base_tip_x + arrow_len * math.cos(rad))
+        tip_y = int(base_tip_y - arrow_len * math.sin(rad))
+        # Draw shaft from circle edge to tip base
+        shaft_end_x = int(base_tip_x + (arrow_len - 16) * math.cos(rad))
+        shaft_end_y = int(base_tip_y - (arrow_len - 16) * math.sin(rad))
+        cv2.line(out, (int(base_tip_x), int(base_tip_y)), (shaft_end_x, shaft_end_y), color, 3)
+        # Triangle head: 16 long, 12 wide
+        head_len, head_width = 16, 12
+        back_x = tip_x - int(head_len * math.cos(rad))
+        back_y = tip_y + int(head_len * math.sin(rad))
         perp_rad = rad + math.pi / 2
         hw = head_width / 2
-        lx = base_x + int(hw * math.cos(perp_rad))
-        ly = base_y - int(hw * math.sin(perp_rad))
-        rx = base_x - int(hw * math.cos(perp_rad))
-        ry = base_y + int(hw * math.sin(perp_rad))
+        lx = back_x + int(hw * math.cos(perp_rad))
+        ly = back_y - int(hw * math.sin(perp_rad))
+        rx = back_x - int(hw * math.cos(perp_rad))
+        ry = back_y + int(hw * math.sin(perp_rad))
         triangle = np.array([[tip_x, tip_y], [lx, ly], [rx, ry]], dtype=np.int32)
         cv2.fillPoly(out, [triangle], color)
 
-        # Text label
-        cv2.putText(out, label, (px + 12, py - 12),
+        # Stacked labels: ID, position (cm), angle
+        text_x = px + _ROBOT_RADIUS + 4
+        text_y = py - _ROBOT_RADIUS
+        cv2.putText(out, label, (text_x, text_y),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        pos_label = f"x={det.position[0]:.1f} y={det.position[1]:.1f}"
+        cv2.putText(out, pos_label, (text_x, text_y + 14),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+        ang_label = f"ang={det.angle_deg:.0f}"
+        cv2.putText(out, ang_label, (text_x, text_y + 28),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
 
     # Draw ball
     if ball is not None and inv_h is not None:
