@@ -63,10 +63,7 @@ trabalho/
 │   ├── preprocessing.py    # CLAHE + Gaussian blur
 │   ├── tracker.py          # Main Tracker class
 │   └── viz.py              # Annotation drawing
-├── tests/                  # Test suite
-├── frames/                 # Extracted video frames
 ├── Trabalho_Final.ipynb    # Main report notebook (theory + pipeline demo)
-├── Cenario_Aplicacao.ipynb # Application scenario notebook
 ├── pyproject.toml
 └── README.md
 ```
